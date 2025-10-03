@@ -3,3 +3,4 @@ pandas
 sqlitecloud
 matplotlib
 seaborn
+plotly

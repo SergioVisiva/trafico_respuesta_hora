@@ -34,12 +34,12 @@ def connection(db):
 
 @st.cache_data
 def get_programas(query):
-    with connection(db="dbBase.sqlite") as con:
+    with connection(db="base_reportes.sqlite") as con:
         cursor = con.execute(query)
         return [row[0] for row in cursor.fetchall()]
 
 
-def consultar_bd(query, db="dbBase.sqlite"):
+def consultar_bd(query, db="base_reportes.sqlite"):
     with connection(db) as con:
         cursor = con.execute(query)
         columnas = [desc[0] for desc in cursor.description]
@@ -101,7 +101,7 @@ with st.sidebar:
     # Respuesta
     resp_seleccion = st.sidebar.multiselect(
         "Seleccionar Respuesta",
-        get_programas("SELECT DISTINCT respuesta_ult_contacto FROM df_hsm"),
+        get_programas("SELECT DISTINCT respuesta_ult_contacto FROM tb_toque_compacto"),
         key="key_respuesta_ult_accion",
     )
 
@@ -123,7 +123,7 @@ if graficar:
             strftime('%H', fecha_ult_accion) AS hora_accion,
             respuesta_ult_contacto,
             fecha_ult_accion
-        FROM df_hsm
+        FROM tb_toque_compacto
         WHERE
             date(fecha_ult_accion) BETWEEN '{fecha_inicio}' AND '{fecha_fin}'
             AND une IN ({", ".join(f"'{i}'" for i in une_seleccion)})

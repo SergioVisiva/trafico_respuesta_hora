@@ -1,5 +1,5 @@
 streamlit
 pandas
-sqlitecloud
+sqlitecloud==0.1.7
 matplotlib
 seaborn

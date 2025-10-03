@@ -108,96 +108,91 @@ with st.sidebar:
 
 if validar_rango_fecha(rango_fechas):
     fecha_inicio, fecha_fin = rango_fechas
+    graficar = True
 
 else:
-    # fecha_inicio = date(2025, 1, 1)
-    # fecha_fin = date(2025, 12, 31)
-    st.warning(
-        "⚠️ El rango de fechas seleccionado no es válido. Se omite el filtro de fecha."
-    )
+    graficar = False
+    st.warning("⚠️ Porfavor termine de seleccionar la fecha de incio y fin")
+if graficar:
 
-
-# --- Query con filtros ---
-query = f"""
-WITH cte_1 AS (
+    # --- Query con filtros ---
+    query = f"""
+    WITH cte_1 AS (
+        SELECT
+            une,
+            strftime('%H', fecha_ult_accion) AS hora_accion,
+            respuesta_ult_contacto,
+            fecha_ult_accion
+        FROM df_hsm
+        WHERE
+            date(fecha_ult_accion) BETWEEN '{fecha_inicio}' AND '{fecha_fin}'
+            AND une IN ({", ".join(f"'{i}'" for i in une_seleccion)})
+            AND respuesta_ult_contacto IN ({", ".join(f"'{i}'" for i in resp_seleccion)})
+    )  
     SELECT
-        une,
-        strftime('%H', fecha_ult_accion) AS hora_accion,
+        hora_accion,
         respuesta_ult_contacto,
-        fecha_ult_accion
-    FROM df_hsm
-    WHERE
-        date(fecha_ult_accion) BETWEEN '{fecha_inicio}' AND '{fecha_fin}'
-        AND une IN ({", ".join(f"'{i}'" for i in une_seleccion)})
-        AND respuesta_ult_contacto IN ({", ".join(f"'{i}'" for i in resp_seleccion)})
-)  
-SELECT
-    hora_accion,
-    respuesta_ult_contacto,
-    COUNT(*) AS conteo
-FROM cte_1
-GROUP BY hora_accion, respuesta_ult_contacto"""
+        COUNT(*) AS conteo
+    FROM cte_1
+    GROUP BY hora_accion, respuesta_ult_contacto"""
 
-# query = """SELECT * FROM df_hsm
-# WHERE date(fecha_ult_accion) BETWEEN '2025-01-01' AND '2025-10-03'
-# LIMIT 10;"""
+    # query = """SELECT * FROM df_hsm
+    # WHERE date(fecha_ult_accion) BETWEEN '2025-01-01' AND '2025-10-03'
+    # LIMIT 10;"""
 
+    # st.markdown(f"""```sql{query}```""")
 
-# st.markdown(f"""```sql{query}```""")
+    df = consultar_bd(query)
 
+    st.markdown("### Frecuencia de Respuestas por Hora (00-23H)")
 
-df = consultar_bd(query)
+    df_pivot = df.pivot(
+        index="respuesta_ult_contacto",
+        columns="hora_accion",  # o 'respuesta' si está escrito correctamente
+        values="conteo",
+    ).fillna(
+        0
+    )  # reemplaza valores faltantes con 0
+    total_respustas = len(resp_seleccion)
 
-st.markdown("### Frecuencia de Respuestas por Hora (00-23H)")
-
-df_pivot = df.pivot(
-    index="respuesta_ult_contacto",
-    columns="hora_accion",  # o 'respuesta' si está escrito correctamente
-    values="conteo",
-).fillna(
-    0
-)  # reemplaza valores faltantes con 0
-total_respustas = len(resp_seleccion)
-
-fig, ax = plt.subplots(figsize=(15, total_respustas * 0.5))
-sns.heatmap(
-    df_pivot,
-    annot=True,
-    fmt="g",
-    cmap="YlOrRd",
-    ax=ax,
-    annot_kws={"size": 8},
-)
-ax.set_xlabel("")
-ax.set_ylabel("")
-st.pyplot(fig)
-
-
-# --- Histograma ---
-if not df.empty:
-    pivot = df.pivot(
-        index="hora_accion", columns="respuesta_ult_contacto", values="conteo"
-    ).fillna(0)
-
-    fig, ax = plt.subplots(figsize=(10, 4))
-    pivot.plot(kind="bar", ax=ax)
-
-    # Etiquetas de los ejes
+    fig, ax = plt.subplots(figsize=(15, total_respustas * 0.5))
+    sns.heatmap(
+        df_pivot,
+        annot=True,
+        fmt="g",
+        cmap="YlOrRd",
+        ax=ax,
+        annot_kws={"size": 8},
+    )
     ax.set_xlabel("")
-    # ax.set_ylabel("Frecuencia")
-
-    # Leyenda más pequeña
-    ax.legend(title="Respuesta", fontsize=8, title_fontsize=10)
-
-    # Más valores en el eje Y
-    max_y = pivot.values.max()
-    ax.set_yticks(
-        range(0, int(max_y) + 1, max(1, int(max_y / 10)))
-    )  # 10 divisiones aprox
-
-    # Etiquetas del eje X sin rotación
-    plt.xticks(rotation=0)
-
+    ax.set_ylabel("")
     st.pyplot(fig)
-else:
-    st.warning("No hay datos para los filtros seleccionados.")
+
+    # --- Histograma ---
+    if not df.empty:
+        pivot = df.pivot(
+            index="hora_accion", columns="respuesta_ult_contacto", values="conteo"
+        ).fillna(0)
+
+        fig, ax = plt.subplots(figsize=(10, 4))
+        pivot.plot(kind="bar", ax=ax)
+
+        # Etiquetas de los ejes
+        ax.set_xlabel("")
+        # ax.set_ylabel("Frecuencia")
+
+        # Leyenda más pequeña
+        ax.legend(title="Respuesta", fontsize=8, title_fontsize=10)
+
+        # Más valores en el eje Y
+        max_y = pivot.values.max()
+        ax.set_yticks(
+            range(0, int(max_y) + 1, max(1, int(max_y / 10)))
+        )  # 10 divisiones aprox
+
+        # Etiquetas del eje X sin rotación
+        plt.xticks(rotation=0)
+
+        st.pyplot(fig)
+    else:
+        st.warning("No hay datos para los filtros seleccionados.")

@@ -4,3 +4,6 @@ sqlitecloud
 matplotlib
 seaborn
 plotly
+
+# UI extra
+streamlit-option-menu

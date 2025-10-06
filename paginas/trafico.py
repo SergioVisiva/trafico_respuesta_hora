@@ -213,10 +213,18 @@ def mostrar():
                 yaxis_title="Cantidad de contactos",
                 legend_title="Respuesta",
                 xaxis=dict(
-                    tickmode="linear", showgrid=True, gridcolor="rgba(200,200,200,0.3)"
+                    tickmode="linear",
+                    showgrid=True,
+                    gridcolor="rgba(200,200,200,0.3)",
+                    title_font=dict(size=16, color="#555"),
+                    tickfont=dict(size=14, color="#555"),
                 ),
                 yaxis=dict(
-                    rangemode="tozero", showgrid=True, gridcolor="rgba(200,200,200,0.3)"
+                    rangemode="tozero",
+                    showgrid=True,
+                    gridcolor="rgba(200,200,200,0.3)",
+                    title_font=dict(size=16, color="#555"),
+                    tickfont=dict(size=14, color="#555"),
                 ),
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(245,245,245,1)",

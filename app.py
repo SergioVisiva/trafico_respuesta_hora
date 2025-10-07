@@ -44,7 +44,7 @@ st.markdown(
 # --- Menú horizontal ---
 seleccion = option_menu(
     menu_title=None,
-    options=["Trafico Respuesta (24H)"],
+    options=["Trafico Respuesta (00-23H)"],
     icons=["collection", "bar-chart", "person-x"],
     menu_icon="cast",
     default_index=0,
@@ -52,5 +52,5 @@ seleccion = option_menu(
 )
 
 # --- Mostrar la página seleccionada ---
-if seleccion == "Trafico Respuesta (24H)":
+if seleccion == "Trafico Respuesta (00-23H)":
     trafico.mostrar()

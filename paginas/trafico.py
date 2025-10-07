@@ -136,6 +136,20 @@ def mostrar():
 
         df = consultar_bd(query)
 
+        # Crear DataFrame con todas las combinaciones de respuesta y hora
+        respuestas = df["respuesta_ult_contacto"].unique()
+        horas = [f"{i:02d}" for i in range(24)]
+
+        base = pd.MultiIndex.from_product(
+            [respuestas, horas], names=["respuesta_ult_contacto", "hora_accion"]
+        ).to_frame(index=False)
+
+        # Unir con los datos existentes
+        df = base.merge(df, on=["respuesta_ult_contacto", "hora_accion"], how="left")
+
+        # Reemplazar valores faltantes de conteo con 0
+        df["conteo"] = df["conteo"].fillna(0).astype(int)
+
         st.markdown("### Mapa de Calor de Contactos por Hora y Respuesta")
 
         # MAPA DE CALOR********************************************
@@ -143,9 +157,7 @@ def mostrar():
             index="respuesta_ult_contacto",
             columns="hora_accion",  # o 'respuesta' si está escrito correctamente
             values="conteo",
-        ).fillna(
-            0
-        )  # reemplaza valores faltantes con 0
+        )
 
         fig, ax = plt.subplots(figsize=(15, len(respuesta_seleccion) * 0.5))
         sns.heatmap(
@@ -156,7 +168,7 @@ def mostrar():
             ax=ax,
             annot_kws={"size": 8},
         )
-        ax.set_xlabel("Horas del dia (0-23H)")
+        ax.set_xlabel("Horas del dia")
         ax.set_ylabel("")
         st.pyplot(fig)
 
@@ -209,11 +221,10 @@ def mostrar():
             fig.update_layout(
                 template="plotly_white",
                 height=height,
-                xaxis_title="Hora del día (0–23)",
                 yaxis_title="Cantidad de contactos",
+                xaxis_title="Horas del dia",
                 legend_title="Respuesta",
                 xaxis=dict(
-                    tickmode="linear",
                     showgrid=True,
                     gridcolor="rgba(200,200,200,0.3)",
                     title_font=dict(size=16, color="#555"),
@@ -241,6 +252,8 @@ def mostrar():
             fig.update_traces(
                 hovertemplate="<b>Hora:</b> %{x}<br><b>Respuesta:</b> %{fullData.name}<br><b>Conteo:</b> %{y:,}<extra></extra>"
             )
+            if tipo == "line":
+                fig.update_xaxes(range=[-0.5, 23.5])
 
             return fig
 
@@ -254,3 +267,5 @@ def mostrar():
             st.plotly_chart(
                 plot_base(df, colores, tipo="line"), use_container_width=True
             )
+
+        st.write("b")

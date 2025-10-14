@@ -4,6 +4,9 @@ sqlitecloud
 matplotlib
 seaborn
 plotly
+XlsxWriter
+
 
 # UI extra
 streamlit-option-menu
+streamlit-aggrid

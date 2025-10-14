@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
-from paginas import trafico, conversion, prueba
+from paginas import pipeline, trafico_actividad, base_gestionable
 
 # --- Configuración de la interfaz ---
 st.set_page_config(
@@ -44,13 +44,17 @@ st.markdown(
 # --- Menú horizontal ---
 seleccion = option_menu(
     menu_title=None,
-    options=["Trafico Respuesta (00-23H)"],
-    icons=["collection", "bar-chart", "person-x"],
+    options=["Pipeline", "Trafico Actividad (00-23H)", "Base Gestionable"],
+    # icons=["collection", "bar-chart", "person-x"],
     menu_icon="cast",
-    default_index=0,
+    default_index=1,
     orientation="horizontal",
 )
 
 # --- Mostrar la página seleccionada ---
-if seleccion == "Trafico Respuesta (00-23H)":
-    trafico.mostrar()
+if seleccion == "Pipeline":
+    pipeline.mostrar()
+if seleccion == "Trafico Actividad (00-23H)":
+    trafico_actividad.mostrar()
+elif seleccion == "Base Gestionable":
+    base_gestionable.mostrar()

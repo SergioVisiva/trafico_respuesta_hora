@@ -14,6 +14,25 @@ from utils import connection, hoy, respuesta_color
 
 
 def mostrar():
+    # --- Expander descriptivo ---
+    with st.expander("ℹ️ Descripción del reporte", expanded=False):
+        st.markdown(
+            f"""
+        ### Reporte de Trafico de Actividad (00-23H)
+
+        💡 Este reporte permite analizar:
+        - Horas de mayor actividad de contactos.
+        - Distribución de respuestas por hora.
+        - Detectar patrones de atención.
+
+        ✉️ Para solicitar cambios, mejoras en gráficos, filtros o métricas, coordinar con:
+
+        **Melissa Rossel**  
+        Gerente de Marketing Digital y Business Intelligence, Educación Continua  
+        📧 mrossel@ieduca.pe
+        """,
+            unsafe_allow_html=True,
+        )
 
     colores = respuesta_color()
 
@@ -26,13 +45,13 @@ def mostrar():
 
     @st.cache_data
     def get_programas(query):
-        with connection(db="base_reportes.sqlite") as con:
+        with connection() as con:
             cursor = con.execute(query)
             return [row[0] for row in cursor.fetchall()]
 
     @st.cache_data
-    def consultar_bd(query, db="base_reportes.sqlite"):
-        with connection(db) as con:
+    def consultar_bd(query):
+        with connection() as con:
             cursor = con.execute(query)
             columnas = [desc[0] for desc in cursor.description]
             datos = cursor.fetchall()
@@ -72,14 +91,6 @@ def mostrar():
     # --- Sidebar: Filtros ---
     with st.sidebar:
         st.markdown(f"# ⚙️ Filtros")
-        # Rango de fechas
-        rango_fechas = st.date_input(
-            "Rango de fecha",
-            key="key_rango_fechas",
-            min_value=date(2025, 1, 1),
-            max_value=date(2025, 12, 31),
-            help="Seleccione primero la fecha inicial y luego la fecha final",
-        )
 
         # UNE
         une_seleccion = st.selectbox(
@@ -89,11 +100,20 @@ def mostrar():
             key="key_une",
         )
 
+        # Rango de fechas
+        rango_fechas = st.date_input(
+            "Rango de fecha",
+            key="key_rango_fechas",
+            min_value=date(2025, 1, 1),
+            max_value=date(2025, 12, 31),
+            help="Seleccione primero la fecha inicial y luego la fecha final",
+        )
+
         # Respuesta
         respuesta_seleccion = st.multiselect(
             "Seleccionar Respuesta",
             get_programas(
-                "SELECT DISTINCT respuesta_ult_contacto FROM tb_toque_compacto WHERE respuesta_ult_contacto IS NOT NULL"
+                "SELECT DISTINCT respuesta_ult_contacto FROM df_toque_25 WHERE respuesta_ult_contacto IS NOT NULL"
             ),
             key="key_respuesta_ult_accion",
         )
@@ -118,7 +138,7 @@ def mostrar():
                 strftime('%H', fecha_ult_accion) AS hora_accion,
                 respuesta_ult_contacto,
                 fecha_ult_accion
-            FROM tb_toque_compacto
+            FROM df_toque_25
             WHERE
                 date(fecha_ult_accion) BETWEEN '{fecha_inicio}' AND '{fecha_fin}'
                 AND une = '{une_seleccion}'
@@ -267,5 +287,3 @@ def mostrar():
             st.plotly_chart(
                 plot_base(df, colores, tipo="line"), use_container_width=True
             )
-
-        st.write("b")

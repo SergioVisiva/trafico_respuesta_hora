@@ -5,11 +5,14 @@ import pandas as pd
 import calendar
 
 hoy = date.today()
+dia = hoy.day
+mes = hoy.month
+anio = hoy.year
 
 
 def connection():
     return sqlitecloud.connect(
-        f"sqlitecloud://cvixcqxfnz.g3.sqlite.cloud:8860/dbBase.sqlite?apikey=x6aRQxTUSHqNkU524H8AsCmutq7jnr0dX1AorzKszuw"
+        f"sqlitecloud://cf1wheejhk.g4.sqlite.cloud:8860/dbBaseReporte.sqlite?apikey=O8ZthZ5mGnHzt1FZyfsnPrYLFPbOVeOzsVguyFR9efM"
     )
 
 
@@ -56,35 +59,6 @@ def get_items(query):
         return [row[0] for row in cursor.fetchall()]
 
 
-def programa(une, nombre_df):
-    programas = st.multiselect(
-        "Seleccionar programa",
-        get_items(f"SELECT DISTINCT programa FROM {nombre_df} WHERE une ='{une}'"),
-        key="key_programa",
-    )
-    return programas
-
-
-def respuesta_ult_contacto(une, nombre_df):
-    respuesta_ult_contacto = st.multiselect(
-        "Seleccionar respuesta",
-        get_items(
-            f"SELECT DISTINCT respuesta_ult_contacto FROM {nombre_df} WHERE une ='{une}'"
-        ),
-        key="key_respuesta_ult_contacto",
-    )
-    return respuesta_ult_contacto
-
-
-def asesor(une, nombre_df):
-    asesor = st.multiselect(
-        "Seleccionar asesor",
-        get_items(f"SELECT DISTINCT asesor FROM {nombre_df} WHERE une ='{une}'"),
-        key="key_asesor",
-    )
-    return asesor
-
-
 @st.cache_data
 def consultar_bd(query):
     with connection() as con:
@@ -126,10 +100,51 @@ def validar_rango_fecha(rango_fechas):
     return all(fechas_correcta)
 
 
+# FILTROS ******************************************
+
+
+def une_seleccion(pagina):
+    # UNE
+    une_seleccion = st.selectbox(
+        "Seleccionar UNE",
+        ["TLS", "UCAL", "CERTUS"],
+        index=0,
+        key=f"key_une_{pagina}",
+    )
+    return une_seleccion
+
+
+def programa(une, nombre_df, pagina):
+    programas = st.multiselect(
+        "Seleccionar programa",
+        get_items(f"SELECT DISTINCT programa FROM {nombre_df} WHERE une ='{une}'"),
+        key=f"key_programa_{pagina}",
+    )
+    return programas
+
+
+def respuesta_ult_contacto(pagina):
+    respuesta_ult_contacto = st.multiselect(
+        "Seleccionar respuesta",
+        get_items(f"SELECT DISTINCT respuesta_ult_contacto FROM df_toque"),
+        key=f"key_respuesta_ult_contacto_{pagina}",
+    )
+    return respuesta_ult_contacto
+
+
+def asesor(une, nombre_df, pagina):
+    asesor = st.multiselect(
+        "Seleccionar asesor",
+        get_items(f"SELECT DISTINCT asesor FROM {nombre_df} WHERE une ='{une}'"),
+        key=f"key_asesor_{pagina}",
+    )
+    return asesor
+
+
 def rango_fechas(titulo, fecha_min, fecha_max, pagina):
     rango_fechas = st.date_input(
         titulo,
-        key=f"rango_fechas_{pagina}",
+        key=f"key_rango_fechas_{pagina}",
         min_value=fecha_min,
         max_value=fecha_max,
         help="Seleccione primero la fecha inicial y luego la fecha final",
@@ -137,24 +152,11 @@ def rango_fechas(titulo, fecha_min, fecha_max, pagina):
     return rango_fechas
 
 
-def une_seleccion():
-    # UNE
-    une_seleccion = st.selectbox(
-        "Seleccionar UNE",
-        ["TLS", "UCAL", "CERTUS"],
-        index=0,
-        key="key_une",
+def tipo_contacto(pagina):
+    tipo_contacto = st.multiselect(
+        "Tipo de contacto",
+        ["positivo", "negativo", "otros"],
+        key=f"key_tipo_contacto_{pagina}",
     )
-    return une_seleccion
 
-
-def respuesta_seleccion():
-    # Respuesta
-    respuesta_seleccion = st.multiselect(
-        "Seleccionar Respuesta",
-        get_items(
-            "SELECT DISTINCT respuesta_ult_contacto FROM df_base_25 WHERE respuesta_ult_contacto IS NOT NULL"
-        ),
-        key="key_respuesta_ult_accion",
-    )
-    return respuesta_seleccion
+    return tipo_contacto

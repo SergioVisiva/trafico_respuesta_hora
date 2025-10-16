@@ -44,11 +44,17 @@ def mostrar():
             unsafe_allow_html=True,
         )
 
-    fecha_min = date(2025, u.hoy.month - 1, 1)
-    fecha_max = u.hoy
+    fecha_corte_filtro = (
+        (datetime(u.anio, u.mes, 1) - datetime.timedelta(days=7)).date()
+        if u.dia <= 7
+        else date(u.anio, u.mes, 1)
+    )
 
-    if "rango_fechas_bg" not in st.session_state.keys():
-        st.session_state.rango_fechas_bg = (fecha_min, fecha_max)
+    if "key_une_bg" not in st.session_state.keys():
+        st.session_state.key_une_bg = "UCAL"
+
+    if "key_rango_fechas_bg" not in st.session_state.keys():
+        st.session_state.key_rango_fechas_bg = (fecha_corte_filtro, u.hoy)
 
     condiciones = []
     # --- Sidebar: Filtros ---
@@ -56,18 +62,23 @@ def mostrar():
 
         st.markdown(f"# ⚙️ Filtros")
         # Rango de fechas
-        une_seleccion = u.une_seleccion()
-
+        une_seleccion = u.une_seleccion(pagina="bg")
+        # rango de fechas
         rango_fechas = u.rango_fechas(
-            "Fecha de llegada", fecha_min, fecha_max, pagina="bg"
+            titulo="Fecha de llegada",
+            fecha_min=date(u.anio, u.mes - 1, 1),
+            fecha_max=u.hoy,
+            pagina="bg",
         )
-        programa = u.programa(une_seleccion, "df_lead")
-        respuesta_ult_contacto = u.respuesta_ult_contacto(une_seleccion, "df_lead")
-        asesor = u.asesor(une_seleccion, "df_lead")
 
-        tipo_contacto = st.multiselect(
-            "Tipo de contacto", ["positivo", "negativo", "otros"]
-        )
+        # programas
+        programa = u.programa(une=une_seleccion, nombre_df="df_lead", pagina="bg")
+        # respuesta
+        respuesta_ult_contacto = u.respuesta_ult_contacto(pagina="bg")
+        # asesor
+        asesor = u.asesor(une=une_seleccion, nombre_df="df_lead", pagina="bg")
+        # tipo contacto
+        tipo_contacto = u.tipo_contacto(pagina="bg")
 
         rango_toques = st.multiselect(
             "Rango de conteo de toques", ["sin toque", "entre 1 y 2", "mas de 2"]
@@ -106,7 +117,9 @@ def mostrar():
         WHEN conteo_toques > 2 THEN 'mas de 2'
     END AS rango_toques
     
-    FROM df_lead )
+    FROM df_lead l
+    left join df_cliente cl on cl.id_une = l.id_une 
+    )
     select * from cte_1
     where une = '{une_seleccion}' {' '.join(condiciones) if condiciones else ''}
     """
@@ -182,8 +195,8 @@ def mostrar():
             st.markdown("### Ranking de asesores por cantidad de leads")
 
             query_asesores = f"""
-                SELECT asesor, COUNT(id_cliente) AS total_leads
-                FROM df_lead
+                SELECT asesor, COUNT(id_une) AS total_leads
+                FROM df_lead 
                 WHERE une = '{une_seleccion}'
                 AND fecha_llegada BETWEEN '{fecha_inicio}' AND '{fecha_fin}'
                 GROUP BY asesor
@@ -213,7 +226,7 @@ def mostrar():
                 st.markdown(f"#### Tipo de contacto: {t.capitalize()}")
 
                 query_programas = f"""
-                    SELECT programa, COUNT(id_cliente) AS total_leads
+                    SELECT programa, COUNT(id_une) AS total_leads
                     FROM df_lead
                     WHERE une = '{une_seleccion}'
                     AND fecha_llegada BETWEEN '{fecha_inicio}' AND '{fecha_fin}'
@@ -240,3 +253,6 @@ def mostrar():
                     st.info(
                         f"No hay datos para el tipo de contacto '{t}' en este rango de fechas."
                     )
+
+    with st.expander("Ver Query"):
+        st.code(query, language="sql")

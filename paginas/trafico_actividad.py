@@ -10,7 +10,7 @@ import sys
 import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from utils import connection, hoy, respuesta_color
+import utils as u
 
 
 def mostrar():
@@ -34,91 +34,35 @@ def mostrar():
             unsafe_allow_html=True,
         )
 
-    colores = respuesta_color()
+    colores = u.respuesta_color()
 
     # --- Conexión a SQLite Cloud ---
+    if "key_une_ta" not in st.session_state.keys():
+        st.session_state.key_une_ta = "UCAL"
 
-    if "key_rango_fechas" not in st.session_state.keys():
-        st.session_state.key_rango_fechas = (date(2025, 1, 1), hoy)
-    if "key_respuesta_ult_accion" not in st.session_state.keys():
-        st.session_state.key_respuesta_ult_accion = ["Indeciso", "Interesado"]
+    if "key_rango_fechas_ta" not in st.session_state.keys():
+        st.session_state.key_rango_fechas_ta = (date(2025, 1, 1), u.hoy)
 
-    @st.cache_data
-    def get_programas(query):
-        with connection() as con:
-            cursor = con.execute(query)
-            return [row[0] for row in cursor.fetchall()]
-
-    @st.cache_data
-    def consultar_bd(query):
-        with connection() as con:
-            cursor = con.execute(query)
-            columnas = [desc[0] for desc in cursor.description]
-            datos = cursor.fetchall()
-            return pd.DataFrame(datos, columns=columnas)
-
-    def validar_rango_fecha(rango_fechas):
-        fechas_correcta = []
-        # validamos que sean dos objetos
-        if len(rango_fechas) == 2:
-            # validamos que ambos objetos sean de instancia fecha
-            if all(isinstance(f, date) for f in rango_fechas):
-                # recorremos ambos objetos
-                for f in rango_fechas:
-                    año = f.year
-                    mes = f.month
-                    dia = f.day
-
-                    # validamos que la fecha recorrida tenga valores validos de año, mes y dia
-                    _, ultimo_dia = calendar.monthrange(año, mes)
-                    if (
-                        (2023 <= año <= hoy.year)
-                        and (1 <= mes <= 12)
-                        and (1 <= dia <= ultimo_dia)
-                    ):
-                        fechas_correcta.append(True)
-
-                    else:
-                        fechas_correcta.append(False)
-
-            else:
-                fechas_correcta = [False]
-        else:
-            fechas_correcta = [False]
-
-        return all(fechas_correcta)
+    if "key_respuesta_ult_contacto_ta" not in st.session_state.keys():
+        st.session_state.key_respuesta_ult_contacto_ta = ["Indeciso", "Interesado"]
 
     # --- Sidebar: Filtros ---
     with st.sidebar:
         st.markdown(f"# ⚙️ Filtros")
 
         # UNE
-        une_seleccion = st.selectbox(
-            "Seleccionar UNE",
-            ["TLS", "UCAL", "CERTUS"],
-            index=0,
-            key="key_une",
+        une_seleccion = u.une_seleccion(pagina="ta")
+        # rango de fechas
+        rango_fechas = u.rango_fechas(
+            titulo="Fecha de accion",
+            fecha_min=date(2025, 1, 1),
+            fecha_max=date(2025, 12, 31),
+            pagina="ta",
         )
+        # respuesta
+        respuesta_seleccion = u.respuesta_ult_contacto(pagina="ta")
 
-        # Rango de fechas
-        rango_fechas = st.date_input(
-            "Rango de fecha",
-            key="key_rango_fechas",
-            min_value=date(2025, 1, 1),
-            max_value=date(2025, 12, 31),
-            help="Seleccione primero la fecha inicial y luego la fecha final",
-        )
-
-        # Respuesta
-        respuesta_seleccion = st.multiselect(
-            "Seleccionar Respuesta",
-            get_programas(
-                "SELECT DISTINCT respuesta_ult_contacto FROM df_toque_25 WHERE respuesta_ult_contacto IS NOT NULL"
-            ),
-            key="key_respuesta_ult_accion",
-        )
-
-    if validar_rango_fecha(rango_fechas) and une_seleccion and respuesta_seleccion:
+    if u.validar_rango_fecha(rango_fechas) and une_seleccion and respuesta_seleccion:
         fecha_inicio, fecha_fin = rango_fechas
         graficar = True
 
@@ -129,7 +73,6 @@ def mostrar():
         )
 
     if graficar:
-
         # --- Query con filtros ---
         query = f"""
         WITH cte_1 AS (
@@ -138,7 +81,7 @@ def mostrar():
                 strftime('%H', fecha_ult_accion) AS hora_accion,
                 respuesta_ult_contacto,
                 fecha_ult_accion
-            FROM df_toque_25
+            FROM df_toque
             WHERE
                 date(fecha_ult_accion) BETWEEN '{fecha_inicio}' AND '{fecha_fin}'
                 AND une = '{une_seleccion}'
@@ -154,7 +97,7 @@ def mostrar():
 
         # st.markdown(f"""```sql{query}```""")
 
-        df = consultar_bd(query)
+        df = u.consultar_bd(query)
 
         # Crear DataFrame con todas las combinaciones de respuesta y hora
         respuestas = df["respuesta_ult_contacto"].unique()
@@ -287,3 +230,6 @@ def mostrar():
             st.plotly_chart(
                 plot_base(df, colores, tipo="line"), use_container_width=True
             )
+
+    with st.expander("Ver Query"):
+        st.code(query, language="sql")

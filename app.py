@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
-from paginas import pipeline_, trafico_actividad, base_gestionable
+from paginas import pipeline, pipeline_, trafico_actividad, base_gestionable
 import locale
 import pandas as pd
 
@@ -52,7 +52,7 @@ seleccion = option_menu(
 
 # --- Mostrar la página seleccionada ---
 if seleccion == "Pipeline":
-    pipeline_.mostrar()
+    pipeline.mostrar()
 if seleccion == "Trafico Actividad (00-23H)":
     trafico_actividad.mostrar()
 elif seleccion == "Base Gestionable":

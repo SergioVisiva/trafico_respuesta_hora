@@ -7,7 +7,7 @@ import pandas as pd
 pd.set_option("styler.render.max_elements", 1_000_000)
 
 # 🔸 Configura el idioma (usa el que funcione en tu sistema operativo)
-locale.setlocale(locale.LC_TIME, "es_ES.utf8")  # o "es_PE.utf8" si estás en Perú
+locale.setlocale(locale.LC_TIME, "es_ES")  # o "es_PE.utf8" si estás en Perú
 
 # --- Configuración de la interfaz ---
 st.set_page_config(

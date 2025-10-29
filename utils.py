@@ -16,35 +16,202 @@ def connection():
     )
 
 
-def respuesta_color():
-    colores = {
+mapeo = {
+    "Indeciso": "positivo",
+    "Interesado": "positivo",
+    "Quiere Matricularse": "positivo",
+    "Volver A Llamar": "positivo",
+}
+
+colores = {
+    "verde_claro": "#C8E6C9",
+    "rojo_claro": "#FFCDD2",
+    "gris_claro": "#E0E0E0",
+    "dorado": "#FFD700",
+    "celeste_claro": "#D0EFF5",
+    "celeste_oscuro": "#9AD3DE",
+}
+
+
+def respuesta_propiedades():
+    propiedades = {
         # 🔴 NEGATIVOS IMPORTANTES
-        "No Contesta": "#d32f2f",  # rojo fuerte
-        "Fuera De Servicio": "#ff6f00",  # naranja intenso
-        "Proxima Campaña": "#c2185b",  # fucsia fuerte
-        "Prox Campaña": "#7b1fa2",  # violeta
-        "Proximas Campañas": "#0288d1",  # azul brillante
-        "Sacar De La Base De Datos": "#2e7d32",  # verde oscuro
+        "No Contesta": {
+            "color": "#FF0000",  # rojo'
+            "icono": "🔴",
+            "tipo": "negativo",
+            "color_tipo": colores["rojo_claro"],
+            "abreviatura": "NC",
+        },
+        "Fuera De Servicio": {
+            "color": "#FF8C00",  # naranja intenso
+            "icono": "🔴",
+            "tipo": "negativo",
+            "color_tipo": colores["rojo_claro"],
+            "abreviatura": "FS",
+        },
+        "Proxima Campaña": {
+            "color": "#FF00FF",  # fucsia fuerte
+            "icono": "🔴",
+            "tipo": "negativo",
+            "color_tipo": colores["rojo_claro"],
+            "abreviatura": "PC",
+        },
+        "Prox Campaña": {
+            "color": "#8A2BE2",  # violeta
+            "icono": "🔴",
+            "tipo": "negativo",
+            "color_tipo": colores["rojo_claro"],
+            "abreviatura": "PC",
+        },
+        "Proximas Campañas": {
+            "color": "#00BFFF",  # azul brillante
+            "icono": "🔴",
+            "tipo": "negativo",
+            "color_tipo": colores["rojo_claro"],
+            "abreviatura": "PC",
+        },
+        "Sacar De La Base De Datos": {
+            "color": "#006400",  # verde oscuro
+            "icono": "🔴",
+            "tipo": "negativo",
+            "color_tipo": colores["rojo_claro"],
+            "abreviatura": "SBD",
+        },
         # 🟢 POSITIVOS IMPORTANTES
-        "Interesado": "#388e3c",  # verde medio
-        "Indeciso": "#1976d2",  # azul intenso
-        "Volver A Llamar": "#fbc02d",  # amarillo fuerte
-        "Quiere Matricularse": "#00897b",  # verde azulado
-        "Se Inscribio": "#5d4037",  # marrón oscuro
-        "Solo Presencial": "#512da8",  # púrpura
-        # ⚪️ NO IMPORTANTES (colores apagados / neutros)
-        "Proximo Inicio": "#bdbdbd",  # gris medio
-        "Contacto Con Terceros": "#9e9e9e",  # gris oscuro
-        "Recomendado": "#757575",  # gris fuerte
-        "Solo Mail": "#a1887f",  # beige apagado
-        "De Certus": "#90a4ae",  # gris azulado
-        "Eventos Mkt": "#cfd8dc",  # gris claro
-        "Inscrito": "#8d6e63",  # marrón claro
-        "De Tls": "#b0bec5",  # gris azulado claro
-        "De Ucal": "#78909c",  # gris plomo
-        "Viene A Evento": "#e0e0e0",  # gris muy claro
+        "Interesado": {
+            "color": "#32CD32",  # verde medio
+            "icono": "🟢",
+            "tipo": "positivo",
+            "color_tipo": colores["verde_claro"],
+            "abreviatura": "Int",
+        },
+        "Indeciso": {
+            "color": "#00008B",  # azul intenso
+            "icono": "🟢",
+            "tipo": "positivo",
+            "color_tipo": colores["verde_claro"],
+            "abreviatura": "Ind",
+        },
+        "Volver A Llamar": {
+            "color": "#FFD700",  # amarillo fuerte
+            "icono": "🟢",
+            "tipo": "positivo",
+            "color_tipo": colores["verde_claro"],
+            "abreviatura": "VLL",
+        },
+        "Quiere Matricularse": {
+            "color": "#20B2AA",  # verde azulado
+            "icono": "🟢",
+            "tipo": "positivo",
+            "color_tipo": colores["verde_claro"],
+            "abreviatura": "QM",
+        },
+        # ⚪️ Otros
+        "Solo Presencial": {
+            "color": "#800080",  # púrpura
+            "icono": "⚪️",
+            "tipo": "otros",
+            "color_tipo": colores["gris_claro"],
+            "abreviatura": "SP",
+        },
+        "Proximo Inicio": {
+            "color": "#808080",  # gris medio
+            "icono": "⚪️",
+            "tipo": "otros",
+            "color_tipo": colores["gris_claro"],
+            "abreviatura": "PI",
+        },
+        "Contacto Con Terceros": {
+            "color": "#505050",  # gris oscuro
+            "icono": "⚪️",
+            "tipo": "otros",
+            "color_tipo": colores["gris_claro"],
+            "abreviatura": "CT",
+        },
+        "Recomendado": {
+            "color": "#303030",  # gris fuerte
+            "icono": "⚪️",
+            "tipo": "otros",
+            "color_tipo": colores["gris_claro"],
+            "abreviatura": "Rec",
+        },
+        "Solo Mail": {
+            "color": "#F5F5DC",  # beige apagado
+            "icono": "⚪️",
+            "tipo": "otros",
+            "color_tipo": colores["gris_claro"],
+            "abreviatura": "SM",
+        },
+        "De Certus": {
+            "color": "#708090",  # gris azulado
+            "icono": "⚪️",
+            "tipo": "otros",
+            "color_tipo": colores["gris_claro"],
+            "abreviatura": "DC",
+        },
+        "Eventos Mkt": {
+            "color": "#D3D3D3",  # gris claro
+            "icono": "⚪️",
+            "tipo": "otros",
+            "color_tipo": colores["gris_claro"],
+            "abreviatura": "EM",
+        },
+        "De Tls": {
+            "color": "#B0C4DE",  # gris azulado claro
+            "icono": "⚪️",
+            "tipo": "otros",
+            "color_tipo": colores["gris_claro"],
+            "abreviatura": "DT",
+        },
+        "De Ucal": {
+            "color": "#A9A9A9",  # gris plomo
+            "icono": "⚪️",
+            "tipo": "otros",
+            "color_tipo": colores["gris_claro"],
+            "abreviatura": "DU",
+        },
+        "Viene A Evento": {
+            "color": "#F0F0F0",  # gris muy claro
+            "icono": "⚪️",
+            "tipo": "otros",
+            "color_tipo": colores["gris_claro"],
+            "abreviatura": "VE",
+        },
+        # VENTA
+        "Se Inscribio": {
+            "color": "#654321",  # marrón oscuro
+            "icono": "🏆",
+            "tipo": "venta",
+            "color_tipo": colores["dorado"],
+            "abreviatura": "SI",
+        },
+        "Inscrito": {
+            "color": "#A0522D",  # marrón claro
+            "icono": "🏆",
+            "tipo": "venta",
+            "color_tipo": colores["dorado"],
+            "abreviatura": "Ins",
+        },
     }
-    return colores
+
+    return propiedades
+
+
+# Función de estilo condicional para 'respuesta_ult_contacto'
+def estilo_respuesta(row, tipo_contacto_aux):
+    color_map = {
+        "positivo": "#C8E6C9",
+        "negativo": "#FFCDD2",
+        "otros": "#E0E0E0",
+        "venta": "#ffd54f",
+    }
+    tipo = tipo_contacto_aux[row.name]  # usamos la Serie auxiliar
+    color = color_map.get(tipo, "#FFFFFF")
+    return [
+        (f"background-color: {color}" if col == "respuesta_ult_contacto" else "")
+        for col in row.index
+    ]
 
 
 def items_comas(items):
@@ -123,19 +290,22 @@ def programa(une, nombre_df, pagina):
     return programas
 
 
-def respuesta_ult_contacto(pagina):
-    respuesta_ult_contacto = st.multiselect(
+def respuesta_contacto(pagina, nom_columna):
+    respuesta_contacto = st.multiselect(
         "Seleccionar respuesta",
-        get_items(f"SELECT DISTINCT respuesta_ult_contacto FROM df_toque"),
-        key=f"key_respuesta_ult_contacto_{pagina}",
+        get_items(f"SELECT DISTINCT {nom_columna} FROM df_toque"),
+        key=f"key_respuesta_contacto_{pagina}",
     )
-    return respuesta_ult_contacto
+    return respuesta_contacto
 
 
-def asesor(une, nombre_df, pagina):
+def asesor(une, nombre_df, pagina, nombre_fecha, fecha_inicio, fecha_fin):
+
     asesor = st.multiselect(
         "Seleccionar asesor",
-        get_items(f"SELECT DISTINCT asesor FROM {nombre_df} WHERE une ='{une}'"),
+        get_items(
+            f"SELECT DISTINCT asesor FROM {nombre_df} WHERE une ='{une}' AND DATE({nombre_fecha}) BETWEEN '{fecha_inicio}' AND '{fecha_fin}'"
+        ),
         key=f"key_asesor_{pagina}",
     )
     return asesor

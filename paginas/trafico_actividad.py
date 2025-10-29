@@ -14,6 +14,10 @@ import utils as u
 
 
 def mostrar():
+
+    respuesta_propiedades = u.respuesta_propiedades()
+    colores = {key: value["color"] for key, value in respuesta_propiedades.items()}
+
     # --- Expander descriptivo ---
     with st.expander("ℹ️ Descripción del reporte", expanded=False):
         st.markdown(
@@ -34,7 +38,7 @@ def mostrar():
             unsafe_allow_html=True,
         )
 
-    colores = u.respuesta_color()
+    # colores = u.respuesta_propiedades.color
 
     # --- Conexión a SQLite Cloud ---
     if "key_une_ta" not in st.session_state.keys():
@@ -43,8 +47,8 @@ def mostrar():
     if "key_rango_fechas_ta" not in st.session_state.keys():
         st.session_state.key_rango_fechas_ta = (date(2025, 1, 1), u.hoy)
 
-    if "key_respuesta_ult_contacto_ta" not in st.session_state.keys():
-        st.session_state.key_respuesta_ult_contacto_ta = ["Indeciso", "Interesado"]
+    if "key_respuesta_contacto_ta" not in st.session_state.keys():
+        st.session_state.key_respuesta_contacto_ta = ["Indeciso", "Interesado"]
 
     # --- Sidebar: Filtros ---
     with st.sidebar:
@@ -60,7 +64,9 @@ def mostrar():
             pagina="ta",
         )
         # respuesta
-        respuesta_seleccion = u.respuesta_ult_contacto(pagina="ta")
+        respuesta_seleccion = u.respuesta_contacto(
+            pagina="ta", nom_columna="respuesta_contacto"
+        )
 
     if u.validar_rango_fecha(rango_fechas) and une_seleccion and respuesta_seleccion:
         fecha_inicio, fecha_fin = rango_fechas
@@ -78,37 +84,37 @@ def mostrar():
         WITH cte_1 AS (
             SELECT
                 une,
-                strftime('%H', fecha_ult_accion) AS hora_accion,
-                respuesta_ult_contacto,
-                fecha_ult_accion
+                strftime('%H', fecha_accion) AS hora_accion,
+                respuesta_contacto,
+                fecha_accion
             FROM df_toque
             WHERE
-                date(fecha_ult_accion) BETWEEN '{fecha_inicio}' AND '{fecha_fin}'
+                date(fecha_accion) BETWEEN '{fecha_inicio}' AND '{fecha_fin}'
                 AND une = '{une_seleccion}'
-                AND respuesta_ult_contacto IN ({", ".join(f"'{i}'" for i in respuesta_seleccion)})
+                AND respuesta_contacto IN ({", ".join(f"'{i}'" for i in respuesta_seleccion)})
         )  
         SELECT
             hora_accion,
-            respuesta_ult_contacto,
+            respuesta_contacto,
             COUNT(*) AS conteo
             
         FROM cte_1
-        GROUP BY hora_accion, respuesta_ult_contacto"""
+        GROUP BY hora_accion, respuesta_contacto"""
 
         # st.markdown(f"""```sql{query}```""")
 
         df = u.consultar_bd(query)
 
         # Crear DataFrame con todas las combinaciones de respuesta y hora
-        respuestas = df["respuesta_ult_contacto"].unique()
+        respuestas = df["respuesta_contacto"].unique()
         horas = [f"{i:02d}" for i in range(24)]
 
         base = pd.MultiIndex.from_product(
-            [respuestas, horas], names=["respuesta_ult_contacto", "hora_accion"]
+            [respuestas, horas], names=["respuesta_contacto", "hora_accion"]
         ).to_frame(index=False)
 
         # Unir con los datos existentes
-        df = base.merge(df, on=["respuesta_ult_contacto", "hora_accion"], how="left")
+        df = base.merge(df, on=["respuesta_contacto", "hora_accion"], how="left")
 
         # Reemplazar valores faltantes de conteo con 0
         df["conteo"] = df["conteo"].fillna(0).astype(int)
@@ -117,7 +123,7 @@ def mostrar():
 
         # MAPA DE CALOR********************************************
         df_pivot = df.pivot(
-            index="respuesta_ult_contacto",
+            index="respuesta_contacto",
             columns="hora_accion",  # o 'respuesta' si está escrito correctamente
             values="conteo",
         )
@@ -149,15 +155,15 @@ def mostrar():
                     df,
                     x="hora_accion",
                     y="conteo",
-                    color="respuesta_ult_contacto",
+                    color="respuesta_contacto",
                     color_discrete_map=colores,
                     barmode="group",
                     text_auto=".0f",
-                    hover_data={"respuesta_ult_contacto": True, "conteo": ":,.0f"},
+                    hover_data={"respuesta_contacto": True, "conteo": ":,.0f"},
                     labels={
                         "hora_accion": "Hora de acción",
                         "conteo": "Cantidad de contactos",
-                        "respuesta_ult_contacto": "Respuesta",
+                        "respuesta_contacto": "Respuesta",
                     },
                 )
             else:  # line
@@ -165,12 +171,12 @@ def mostrar():
                     df,
                     x="hora_accion",
                     y="conteo",
-                    color="respuesta_ult_contacto",
+                    color="respuesta_contacto",
                     color_discrete_map=colores,
                     markers=True,
                     hover_data={
                         "hora_accion": True,
-                        "respuesta_ult_contacto": True,
+                        "respuesta_contacto": True,
                         "conteo": ":,.0f",
                     },
                 )

@@ -1,6 +1,13 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
-from paginas import pipeline, trafico_actividad, base_gestionable
+from paginas import pipeline_, trafico_actividad, base_gestionable
+import locale
+import pandas as pd
+
+pd.set_option("styler.render.max_elements", 1_000_000)
+
+# 🔸 Configura el idioma (usa el que funcione en tu sistema operativo)
+locale.setlocale(locale.LC_TIME, "es_ES.utf8")  # o "es_PE.utf8" si estás en Perú
 
 # --- Configuración de la interfaz ---
 st.set_page_config(
@@ -9,37 +16,29 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-# --- CSS para estilo general ---
+
 st.markdown(
     """
-    <style>
-        html, body, [class*="css"] {
-            font-size: 14px !important;
-        }
-        .block-container {
-            padding-top: 0.5rem;
-            margin-top: 30px;
-            padding-left: 2rem;
-            padding-right: 2rem;
-            max-width: 1300px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .stButton > button {
-            padding: 0.25rem 0.75rem;
-            font-size: 14px;
-        }
-        .stDownloadButton > button {
-            padding: 0.4rem 0.8rem;
-            font-size: 14px;
-        }
-        h1, h2, h3, h4 {
-            margin-bottom: 0.3rem;
-        }
-    </style>
+<style>
+.block-container {
+    max-width: 100% !important;  /* ocupa todo el ancho */
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 3rem;         /* 👈 reduce el espacio arriba (valor intermedio) */
+}
+[data-testid="stDataFrame"] div[role="grid"] {
+    width: 100% !important;      /* tabla ancho completo */
+}
+div[data-testid="stHorizontalBlock"] {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;             /* evita que se corte el menú */
+}
+</style>
 """,
     unsafe_allow_html=True,
 )
+
 
 # --- Menú horizontal ---
 seleccion = option_menu(
@@ -47,13 +46,13 @@ seleccion = option_menu(
     options=["Pipeline", "Trafico Actividad (00-23H)", "Base Gestionable"],
     # icons=["collection", "bar-chart", "person-x"],
     menu_icon="cast",
-    default_index=1,
+    default_index=2,
     orientation="horizontal",
 )
 
 # --- Mostrar la página seleccionada ---
 if seleccion == "Pipeline":
-    pipeline.mostrar()
+    pipeline_.mostrar()
 if seleccion == "Trafico Actividad (00-23H)":
     trafico_actividad.mostrar()
 elif seleccion == "Base Gestionable":

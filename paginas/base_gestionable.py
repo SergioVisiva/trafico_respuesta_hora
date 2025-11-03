@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import sqlitecloud
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import calendar
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -49,7 +49,7 @@ def mostrar():
             unsafe_allow_html=True,
         )
     fecha_corte_filtro = (
-        (datetime(u.anio, u.mes, 1) - datetime.timedelta(days=7)).date()
+        (datetime(u.anio, u.mes, 1) - timedelta(days=7)).date()
         if u.dia <= 7
         else date(u.anio, u.mes, 1)
     )
@@ -62,92 +62,95 @@ def mostrar():
 
     if "key_rango_fechas_bg_toque" not in st.session_state.keys():
         st.session_state.key_rango_fechas_bg_toque = (
-            date(u.anio, u.mes, u.dia - 8),
+            (u.hoy - timedelta(days=7)),
             date(u.anio, u.mes, u.dia - 1),
         )
 
-    condiciones = []
     # --- Sidebar: Filtros ---
     with st.sidebar:
 
         st.markdown(f"# ⚙️ Filtros")
-        # Rango de fechas
+        # une
         une_seleccion = u.une_seleccion(pagina="bg")
-        # rango de fechas
+
+        # rango de fecha de llegada
         rango_fechas_llegada = u.rango_fechas(
             titulo="Fecha de llegada",
             fecha_min=date(u.anio, u.mes - 1, 1),
             fecha_max=u.hoy,
             pagina="bg_llegada",
         )
+        if u.validar_rango_fecha(rango_fechas_llegada):
+            val_fecha_llegada = True
+            fecha_inicio_llegada, fecha_fin_llegada = rango_fechas_llegada
+            cond_fecha_llegada = f" and DATE(fecha_llegada) BETWEEN '{fecha_inicio_llegada}' AND '{fecha_fin_llegada}' "
 
+        # rango de fecha de toques
         rango_fechas_toque = u.rango_fechas(
             titulo="Fecha de accion",
             fecha_min=date(u.anio, 1, 1),
             fecha_max=u.hoy,
             pagina="bg_toque",
         )
+        if u.validar_rango_fecha(rango_fechas_toque):
+            val_fecha_accion = True
+            fecha_inicio_accion, fecha_fin_accion = rango_fechas_toque
+            cond_fecha_accion = f"DATE(fecha_accion) BETWEEN '{fecha_inicio_accion}' AND '{fecha_fin_accion}' "
 
-        # VALIDAR QUE SE SELECCIONARON FECHA CORRECTAMENTE:
-    if not u.validar_rango_fecha(rango_fechas_llegada) or not u.validar_rango_fecha(
-        rango_fechas_toque
-    ):
+        # programa
+        programa = u.programa(une=une_seleccion, nombre_df="df_lead", pagina="bg")
+        if programa:
+            cond_programa = f" and programa in ({u.items_comas(programa)})"
+
+        # respuesta
+        respuesta_contacto = u.respuesta_contacto(
+            pagina="bg", nom_columna="respuesta_contacto"
+        )
+        if respuesta_contacto:
+            cond_respuesta_contacto = (
+                f" and respuesta_ult_contacto in ({u.items_comas(respuesta_contacto)})"
+            )
+
+        # tipo contacto
+        tipo_contacto = u.tipo_contacto(pagina="bg")
+        if tipo_contacto:
+            cond_tipo_contacto = (
+                f" and tipo_contacto in ({u.items_comas(tipo_contacto)})"
+            )
+
+        # rango de toques
+        rango_toques = st.multiselect(
+            "Rango de conteo de toques",
+            # ["sin toque", "entre 1 y 2", "mas de 2"],
+            ["entre 1 y 2", "mas de 2"],
+        )
+        if rango_toques:
+            cond_rango_toques = f" and rango_toques in ({u.items_comas(rango_toques)})"
+
+    # VALIDAR QUE SE SELECCIONARON FECHA CORRECTAMENTE:
+    if not val_fecha_llegada or not val_fecha_accion:
         st.warning(
             "⚠️ El rango de fechas seleccionado no es válido. Termine se leccionar tanto la fecha de Inicio como la fecha de Fin"
         )
 
-    # FECHAS CORRECTAS ENTONCES SE RENDERIZA EL RESTO DE LA PAGINA**********************************************
     else:
         with st.sidebar:
-            # programas
-            programa = u.programa(une=une_seleccion, nombre_df="df_lead", pagina="bg")
-            # respuesta
-            respuesta_contacto = u.respuesta_contacto(
-                pagina="bg", nom_columna="respuesta_contacto"
-            )
-            # tipo contacto
-            tipo_contacto = u.tipo_contacto(pagina="bg")
-
-            rango_toques = st.multiselect(
-                "Rango de conteo de toques",
-                ["sin toque", "entre 1 y 2", "mas de 2"],
-            )
-
-        if tipo_contacto:
-            condiciones.append(
-                f" and tipo_contacto in ({u.items_comas(tipo_contacto)})"
-            )
-        if rango_toques:
-            condiciones.append(f" and rango_toques in ({u.items_comas(rango_toques)})")
-        if programa:
-            condiciones.append(f" and programa in ({u.items_comas(programa)})")
-        if respuesta_contacto:
-            condiciones.append(
-                f" and respuesta_ult_contacto in ({u.items_comas(respuesta_contacto)})"
-            )
-
-        fecha_inicio, fecha_fin = rango_fechas_llegada
-        condiciones.append(
-            f" and DATE(fecha_llegada) BETWEEN '{fecha_inicio}' AND '{fecha_fin}' "
-        )
-
-        with st.sidebar:
+            # asesor
             asesor = u.asesor(
                 une=une_seleccion,
                 nombre_df="df_lead",
                 pagina="bg",
                 nombre_fecha="fecha_llegada",
-                fecha_inicio=fecha_inicio,
-                fecha_fin=fecha_fin,
+                fecha_inicio=fecha_inicio_llegada,
+                fecha_fin=fecha_fin_llegada,
             )
         if asesor:
-            condiciones.append(f" and asesor in ({u.items_comas(asesor)})")
-        fecha_inicio_accion, fecha_fin_accion = rango_fechas_toque
+            cond_asesor = f" and asesor in ({u.items_comas(asesor)})"
 
         query = f"""
         With 
         cte_1 as (
-        SELECT
+        select 
         id_une,
         une,
         asesor,
@@ -156,29 +159,18 @@ def mostrar():
         tipo_contacto,
         fecha_llegada,
         conteo_toques,
-        CASE
-            WHEN conteo_toques = 0 THEN 'sin toque'
-            WHEN conteo_toques BETWEEN 1 AND 2 THEN 'entre 1 y 2'
-            WHEN conteo_toques > 2 THEN 'mas de 2'
-        END AS rango_toques
-        FROM df_lead l
-        ),
+        rango_toques,
+        primera_accion
         
-        cte_2 as (
-        select 
-        *
-        from cte_1     
-        where une = '{une_seleccion}' {' '.join(condiciones) if condiciones else ''}
-        ),
-        
-        -- CTE para obtener la primera acción por id_une
-        cte_primera_accion as (
-        select
-        c.id_une,
-        min(t.fecha_accion) as primera_accion
-        from cte_2 c
-        left join df_toque t on t.id_une = c.id_une
-        group by c.id_une
+        from df_lead     
+        where 
+        une = '{une_seleccion}' 
+        {cond_fecha_llegada}
+        {cond_programa if programa else ""}
+        {cond_respuesta_contacto if respuesta_contacto else ""}
+        {cond_tipo_contacto if tipo_contacto else ""}
+        {cond_rango_toques if rango_toques else ""}
+        {cond_asesor if asesor else ""}        
         )
         
         select 
@@ -187,14 +179,12 @@ def mostrar():
         t.asesor as asesor_t,
         t.tipo_accion as tipo_accion_t,
         t.fecha_accion as fecha_accion_t,
-        t.respuesta_contacto as respuesta_contacto_t,
-        pa.primera_accion
+        t.respuesta_contacto as respuesta_contacto_t
         
-        from cte_2 c
+        from cte_1 c
         left join df_cliente cl on cl.id_une = c.id_une
         left join df_toque t on t.id_une = c.id_une 
-        left join cte_primera_accion pa on pa.id_une = c.id_une 
-        where DATE(t.fecha_accion) BETWEEN '{fecha_inicio_accion}' AND '{fecha_fin_accion}' 
+        where {cond_fecha_accion} 
         """
 
         df = u.consultar_bd(query)
@@ -334,9 +324,8 @@ def mostrar():
 
         # Colorear "conteo_toques" con un gradiente de color
         toque_vals = df_pivot["conteo_toques"].astype(float)
-        norm = (toque_vals - toque_vals.min()) / (
-            toque_vals.max() - toque_vals.min() + 1e-9
-        )
+
+        norm = (toque_vals) / (37)
         colors = [
             cm.Reds(norm_val) for norm_val in norm
         ]  # puedes usar otros colormaps de matplotlib
@@ -396,8 +385,8 @@ def mostrar():
                 "Ingrese el id_cliente para buscar:", key="input_id_cliente_bg"
             )
             if id_cliente:
-
-                df_toque = df[df.id_cliente == int(id_cliente)][
+                st.write("Toques del 2025")
+                df_toque = df[df.id_cliente == id_cliente][
                     [
                         "asesor_t",
                         "tipo_accion_t",
@@ -437,7 +426,7 @@ def mostrar():
         with st.expander("📊 Análisis Gráficos", expanded=True):
             st.markdown(
                 f"Análisis basado en **todos los leads** de **{une_seleccion}** "
-                f"entre **{fecha_inicio}** y **{fecha_fin}**."
+                f"entre **{fecha_inicio_llegada}** y **{fecha_fin_llegada}**."
             )
             tab1, tab2 = st.tabs(["Ranking de asesores", "Programas por tipo"])
 
@@ -446,10 +435,12 @@ def mostrar():
                 st.markdown("### Ranking de asesores por cantidad de leads")
 
                 query_asesores = f"""
-                    SELECT asesor, COUNT(id_une) AS total_leads
+                    SELECT 
+                    asesor, 
+                    COUNT(id_une) AS total_leads
                     FROM df_lead
                     WHERE une = '{une_seleccion}'
-                    AND fecha_llegada BETWEEN '{fecha_inicio}' AND '{fecha_fin}'
+                    AND fecha_llegada BETWEEN '{fecha_inicio_llegada}' AND '{fecha_fin_llegada}'
                     GROUP BY asesor
                     ORDER BY total_leads DESC
                 """
@@ -479,10 +470,12 @@ def mostrar():
                     st.markdown(f"#### Tipo de contacto: {t.capitalize()}")
 
                     query_programas = f"""
-                        SELECT programa, COUNT(id_une) AS total_leads
+                        SELECT 
+                        programa, 
+                        COUNT(id_une) AS total_leads
                         FROM df_lead
                         WHERE une = '{une_seleccion}'
-                        AND fecha_llegada BETWEEN '{fecha_inicio}' AND '{fecha_fin}'
+                        AND fecha_llegada BETWEEN '{fecha_inicio_llegada}' AND '{fecha_fin_llegada}'
                         AND tipo_contacto = '{t}'
                         GROUP BY programa
                         ORDER BY total_leads DESC
@@ -507,5 +500,5 @@ def mostrar():
                             f"No hay datos para el tipo de contacto '{t}' en este rango de fechas."
                         )
 
-    with st.expander("Ver Query"):
-        st.code(query, language="sql")
+        with st.expander("Ver Query"):
+            st.code(query, language="sql")

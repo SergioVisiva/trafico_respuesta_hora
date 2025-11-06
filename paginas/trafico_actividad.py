@@ -15,7 +15,7 @@ import utils as u
 
 def mostrar():
 
-    respuesta_propiedades = u.respuesta_propiedades()
+    respuesta_propiedades = u.respuesta_propiedades
     colores = {key: value["color"] for key, value in respuesta_propiedades.items()}
 
     # --- Expander descriptivo ---
@@ -55,7 +55,7 @@ def mostrar():
         st.markdown(f"# ⚙️ Filtros")
 
         # UNE
-        une_seleccion = u.une_seleccion(pagina="ta")
+        une_seleccion = u.une(pagina="ta")
         # rango de fechas
         rango_fechas = u.rango_fechas(
             titulo="Fecha de accion",

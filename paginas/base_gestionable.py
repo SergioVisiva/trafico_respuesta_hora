@@ -19,7 +19,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 def mostrar():
 
-    respuesta_propiedades = u.respuesta_propiedades()
+    respuesta_propiedades = u.respuesta_propiedades
 
     with st.expander("ℹ️ Descripción del reporte", expanded=False):
         st.markdown(
@@ -71,7 +71,7 @@ def mostrar():
 
         st.markdown(f"# ⚙️ Filtros")
         # une
-        une_seleccion = u.une_seleccion(pagina="bg")
+        une_seleccion = u.une(pagina="bg")
 
         # rango de fecha de llegada
         rango_fechas_llegada = u.rango_fechas(
@@ -325,7 +325,10 @@ def mostrar():
         # Colorear "conteo_toques" con un gradiente de color
         toque_vals = df_pivot["conteo_toques"].astype(float)
 
-        norm = (toque_vals) / (37)
+        max_conteo_toque = u.ejecutar_query(
+            "select max(conteo_toques) from df_lead"
+        ).iloc[0, 0]
+        norm = (toque_vals) / (max_conteo_toque)
         colors = [
             cm.Reds(norm_val) for norm_val in norm
         ]  # puedes usar otros colormaps de matplotlib

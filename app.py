@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
-from paginas import pipeline, pipeline_, trafico_actividad, base_gestionable
+from paginas import pipeline, pipeline_, trafico_actividad, base_gestionable, resumen
 import locale
 import pandas as pd
 
@@ -43,17 +43,19 @@ div[data-testid="stHorizontalBlock"] {
 # --- Menú horizontal ---
 seleccion = option_menu(
     menu_title=None,
-    options=["Pipeline", "Trafico Actividad (00-23H)", "Base Gestionable"],
+    options=["Pipeline", "Trafico Actividad (00-23H)", "Base Gestionable", "Resumen"],
     # icons=["collection", "bar-chart", "person-x"],
     menu_icon="cast",
-    default_index=2,
+    default_index=3,
     orientation="horizontal",
 )
 
 # --- Mostrar la página seleccionada ---
-if seleccion == "Pipeline":
+if seleccion == "Resumen":
+    resumen.mostrar()
+elif seleccion == "Pipeline":
     pipeline.mostrar()
-if seleccion == "Trafico Actividad (00-23H)":
+elif seleccion == "Trafico Actividad (00-23H)":
     trafico_actividad.mostrar()
 elif seleccion == "Base Gestionable":
     base_gestionable.mostrar()

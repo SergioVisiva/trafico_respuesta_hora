@@ -160,7 +160,8 @@ def mostrar():
         fecha_llegada,
         conteo_toques,
         rango_toques,
-        primera_accion
+        fecha_pri_accion,
+        fecha_ult_accion
         
         from df_lead     
         where 
@@ -188,6 +189,12 @@ def mostrar():
         """
 
         df = u.consultar_bd(query)
+        df = df.rename(
+            columns={
+                "fecha_pri_accion": "primera_accion",
+                "fecha_ult_accion": "ultima_accion",
+            }
+        )
         df["fecha_accion_t"] = pd.to_datetime(df["fecha_accion_t"])
         df["fecha_accion_date"] = df["fecha_accion_t"].dt.date
 
@@ -203,6 +210,7 @@ def mostrar():
                     "tipo_contacto",
                     "fecha_llegada",
                     "primera_accion",
+                    "ultima_accion",
                     "conteo_toques",
                     "fecha_accion_date",
                 ]
@@ -266,6 +274,7 @@ def mostrar():
                 "tipo_contacto",
                 "fecha_llegada",
                 "primera_accion",
+                "ultima_accion",
                 "conteo_toques",
             ],
             columns="fecha_accion_date",
@@ -281,6 +290,7 @@ def mostrar():
                 "tipo_contacto",
                 "fecha_llegada",
                 "primera_accion",
+                "ultima_accion",
                 "conteo_toques",
             ],
             columns="fecha_accion_date",

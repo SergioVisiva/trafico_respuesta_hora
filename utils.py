@@ -1,6 +1,6 @@
 import sqlitecloud
 import streamlit as st
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import pandas as pd
 import calendar
 
@@ -36,6 +36,38 @@ df_meses = pd.DataFrame(
     }
 )
 
+
+def generar_df_dia_mes(anio, mes):
+    inicio = date(anio, mes, 1)
+    if mes == 12:
+        fin = date(anio + 1, 1, 1)
+    else:
+        fin = date(anio, mes + 1, 1)
+
+    dias = pd.date_range(start=inicio, end=fin - timedelta(days=1), freq="D")
+    dias_semana = ["lun", "mar", "mie", "jue", "vie", "sab", "dom"]
+
+    df = pd.DataFrame(
+        {
+            "fecha": dias,
+            "num_dia": dias.day,
+            "nom_dia": dias.weekday.map(lambda x: dias_semana[x]),
+        }
+    )
+    df["num_nom"] = df["num_dia"].astype(str) + " " + df["nom_dia"]
+
+    return df
+
+
+mapa_dias = {
+    "0": "dom",
+    "1": "lun",
+    "2": "mar",
+    "3": "mie",
+    "4": "jue",
+    "5": "vie",
+    "6": "sab",
+}
 
 mapeo = {
     "Indeciso": "positivo",
@@ -269,9 +301,8 @@ def consultar_bd(query):
             columnas = [desc[0] for desc in cursor.description]
             return pd.DataFrame(datos, columns=columnas)
         else:
-            None
-            # columnas = [desc[0] for desc in cursor.description]
-            # return pd.DataFrame(columns=columnas)
+            columnas = [desc[0] for desc in cursor.description]
+            return pd.DataFrame(columns=columnas)
 
 
 def validar_rango_fecha(rango_fechas):
@@ -313,7 +344,7 @@ def une(pagina):
     # UNE
     une = st.selectbox(
         "Seleccionar UNE",
-        ["TLS", "UCAL", "CERTUS"],
+        ["CERTUS", "UCAL", "TLS"],
         index=0,
         key=f"key_une_{pagina}",
     )

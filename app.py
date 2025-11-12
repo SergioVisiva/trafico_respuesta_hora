@@ -59,3 +59,36 @@ elif seleccion == "Trafico Actividad (00-23H)":
     trafico_actividad.mostrar()
 elif seleccion == "Base Gestionable":
     base_gestionable.mostrar()
+
+st.markdown(
+    """
+<style>
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: #f8f9fa;
+    color: #333;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 14px;
+    border-top: 1px solid #ddd;
+}
+.footer a {
+    color: #0073b1;
+    text-decoration: none;
+    margin: 0 5px;
+}
+</style>
+
+<div class="footer">
+    <b>Sergio Carbajal</b> — Analista de Datos y Automatización |
+    <a href="https://www.linkedin.com/in/sergiocarbajal/" target="_blank">LinkedIn</a> |
+    <a href="https://github.com/sergiocarbajal421-alt" target="_blank">GitHub</a> |
+    📧 <a href="mailto:sergiocarbajal421@gmail.com">sergiocarbajal421@gmail.com</a> |
+    📞 901 439 762
+</div>
+""",
+    unsafe_allow_html=True,
+)
